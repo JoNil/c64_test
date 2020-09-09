@@ -1,0 +1,56 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "bin\\win\\acme",
+                "-f",
+                "cbm",
+                "-l",
+                "build/labels",
+                "-o",
+                "build/main.prg",
+                "code/main.asm"
+            ],
+            "problemMatcher": {
+                "owner": "acme",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "pattern": {
+                    "regexp": "^(Error - File\\s+(.*), line (\\d+) (\\(Zone .*\\))?:\\s+(.*))$",
+                    "file": 2,
+                    "location": 3,
+                    "message": 1
+                }
+            }
+        },
+        {
+            "label": "Start",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "C:\\Program Files\\VICE\\x64sc.exe",
+                "-moncommands",
+                "build/labels",
+                "build/main.prg"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "clear": true
+            },
+            "dependsOn": "Build",
+        },
+    ]
+}
