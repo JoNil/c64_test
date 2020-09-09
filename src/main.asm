@@ -19,36 +19,37 @@ SCREENRAM_3   = $0700
 clear
     ldx #$00
 
-clear_loop
-    lda #$20
-    sta SCREENRAM, x
-    sta SCREENRAM_1, x
-    sta SCREENRAM_2, x
-    sta SCREENRAM_3, x
-    dex
-    bne clear_loop
-    rts
+    clear_loop
+        lda #$20
+        sta SCREENRAM, x
+        sta SCREENRAM_1, x
+        sta SCREENRAM_2, x
+        sta SCREENRAM_3, x
+        dex
+        bne clear_loop
+        rts
 
 entry
-    lda #$06                ; the color value
-    sta BGCOLOR             ; change background color
-    sta BORDERCOLOR         ; change border color
+    lda #$06
+    sta BGCOLOR
+    sta BORDERCOLOR
 
     jsr clear
     ;jsr $e544
 
-    ldy #$0c                ; the string "hello world!" has 12 (= $0c) characters
-    ldx #$00                ; start at position 0 of the string
+    ldx #$00
 
-character_loop
-    lda hello, x            ; load character number x of the string
-    sta SCREENRAM, x        ; save it at position x of the screen ram
-    inx                     ; increment x by 1
-    dey                     ; decrement y by 1
-    bne character_loop      ; is y positive? then repeat
+    character_loop
+        lda hello, x            ; load character number x of the string
+        beq character_end
+        sta SCREENRAM, x        ; save it at position x of the screen ram
+        inx                     ; increment x by 1
+        jmp character_loop      ; is y positive? then repeat
+    character_end
+
 
 exit
     jmp exit
 
 hello
-    !scr "hello world!"     ; our string to display
+    !scr "hello world!",0    ; our string to display
