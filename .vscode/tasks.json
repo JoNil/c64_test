@@ -16,7 +16,7 @@
                 "build/labels",
                 "-o",
                 "build/main.prg",
-                "code/main.asm"
+                "src/main.asm"
             ],
             "problemMatcher": {
                 "owner": "acme",
