@@ -40,11 +40,11 @@ entry
     ldx #$00
 
     character_loop
-        lda hello, x            ; load character number x of the string
+        lda hello, x
         beq character_end
-        sta SCREENRAM, x        ; save it at position x of the screen ram
-        inx                     ; increment x by 1
-        jmp character_loop      ; is y positive? then repeat
+        sta SCREENRAM, x
+        inx
+        jmp character_loop
     character_end
 
 
