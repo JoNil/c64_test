@@ -41,8 +41,11 @@ clear_loop
 
 
 VOLUME = $d418
-ATTACK_DECAY = $d405
-SUSTAIN_RELEASE = $d405
+VOICE_1_FREQ_LOW = $d400
+VOICE_1_FREQ_HIGH = $d401
+VOICE_1_CTRL = $d404
+VOICE_1_ATTACK_DECAY = $d405
+VOICE_1_SUSTAIN_RELEASE = $d406
 
 ;------------------------------------------
 ; void make_sound()
@@ -51,11 +54,27 @@ make_sound
     sei
 
     +store VOLUME, $0f
-    +store ATTACK_DECAY, $61
-    +store SUSTAIN_RELEASE, $c8
 
+    +store VOICE_1_ATTACK_DECAY, $61
+    +store VOICE_1_SUSTAIN_RELEASE, $c8
+    
+    +store VOICE_1_FREQ_LOW, $34
+    +store VOICE_1_FREQ_HIGH, $10
+    
+    +store VOICE_1_CTRL, $21
+
+    ldy #$00
+    ldx #$00
+make_sound_wait:
+    inx
+    bne make_sound_wait
+    iny
+    bne make_sound_wait
+
+    +store VOICE_1_CTRL, $20
+
+    cli
     rts
-
 
 BGCOLOR = $d020
 BORDERCOLOR = $d021
@@ -74,16 +93,16 @@ entry
 
     ldx #$00
 
-character_loop
-    lda hello, x
-    beq character_end
+entry_character_loop
+    lda entry_hello, x
+    beq entry_character_end
     sta SCREENRAM, x
     inx
-    jmp character_loop
-character_end
+    jmp entry_character_loop
+entry_character_end
 
-exit
-    jmp exit
+entry_exit
+    jmp entry_exit
 
-hello
+entry_hello
     !scr "hello world!",0    ; our string to display
