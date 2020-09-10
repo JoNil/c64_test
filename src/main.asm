@@ -16,19 +16,25 @@ SCREENRAM_3   = $0700
     !byte '0' + entry %    10             
     !byte $00, $00, $00           ; end of basic
 
+;------------------------------------------
+; void clear()
+; Clear the screen
 clear
     ldx #$00
 
 clear_loop
-        lda #$20
-        sta SCREENRAM, x
-        sta SCREENRAM_1, x
-        sta SCREENRAM_2, x
-        sta SCREENRAM_3, x
-        dex
-        bne clear_loop
-        rts
+    lda #$20
+    sta SCREENRAM, x
+    sta SCREENRAM_1, x
+    sta SCREENRAM_2, x
+    sta SCREENRAM_3, x
+    dex
+    bne clear_loop
+    rts
 
+;------------------------------------------
+; void entry()
+; Program entrypoint
 entry
     lda #$06
     sta BGCOLOR
@@ -40,13 +46,12 @@ entry
     ldx #$00
 
 character_loop
-        lda hello, x
-        beq character_end
-        sta SCREENRAM, x
-        inx
-        jmp character_loop
+    lda hello, x
+    beq character_end
+    sta SCREENRAM, x
+    inx
+    jmp character_loop
 character_end
-
 
 exit
     jmp exit
