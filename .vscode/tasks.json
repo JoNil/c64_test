@@ -47,9 +47,6 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "presentation": {
-                "clear": true
-            },
             "dependsOn": "Build",
         },
     ]
