@@ -25,7 +25,7 @@
                     "${workspaceFolder}"
                 ],
                 "pattern": {
-                    "regexp": "^(Error - File\\s+(.*), line (\\d+) (\\(Zone .*\\))?:\\s+(.*))$",
+                    "regexp": "^([A-z]* - File\\s+(.*), line (\\d+) (\\(Zone .*\\))?:\\s+(.*))$",
                     "file": 2,
                     "location": 3,
                     "message": 1
