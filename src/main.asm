@@ -19,7 +19,7 @@ SCREENRAM_3   = $0700
 clear
     ldx #$00
 
-    clear_loop
+clear_loop
         lda #$20
         sta SCREENRAM, x
         sta SCREENRAM_1, x
@@ -39,13 +39,13 @@ entry
 
     ldx #$00
 
-    character_loop
+character_loop
         lda hello, x
         beq character_end
         sta SCREENRAM, x
         inx
         jmp character_loop
-    character_end
+character_end
 
 
 exit
