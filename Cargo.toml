@@ -4,3 +4,9 @@ members = [
     "rhai_test",
     "rust_test",
 ]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
