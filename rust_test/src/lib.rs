@@ -1,5 +1,7 @@
+#![no_std]
+
 use core::sync::atomic::spin_loop_hint;
-use std::ptr::write_volatile;
+use core::ptr::write_volatile;
 
 const BASIC_INIT_STUB_SIZE: u16 = 12;
 const ENTRY_ADDRESS: u16 = 0x0801 + BASIC_INIT_STUB_SIZE;
@@ -85,11 +87,8 @@ pub fn entry() {
         clear();
         make_sound();
 
-        let mut index: u8 = 0;
-
-        for c in HELLO {
-            write_volatile(SCREENRAM.offset(index as isize), *c);
-            index += 1;
+        for (i, c) in HELLO.iter().enumerate() {
+            write_volatile(SCREENRAM.add(i), *c);
         }
 
         loop {}
