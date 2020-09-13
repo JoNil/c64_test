@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "rhai_test",
+    "rust_test",
+]
