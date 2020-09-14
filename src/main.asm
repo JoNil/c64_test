@@ -36,7 +36,7 @@ clear
     dex
     bne -
     rts
-
+;------------------------------------------
 
 VOLUME = $d418
 VOICE_1_FREQ_LOW = $d400
@@ -89,7 +89,6 @@ draw_test_text:
 ; void draw_hello_world()
 draw_hello_world:
     ldx #$00
-
 -   lda .hello_world, x
     beq +
     sta SCREENRAM, x
@@ -98,6 +97,38 @@ draw_hello_world:
 +   rts
 .hello_world
     !scr "hello world!",0    ; our string to display
+;------------------------------------------
+
+Y_SCROLL = $d011
+X_SCROLL = $d016
+
+;------------------------------------------
+; void scroll()
+BACKGROUND_SCROLL_X = *: !byte 0
+BACKGROUND_SCROLL_Y = *: !byte 0
+scroll
+    inc BACKGROUND_SCROLL_X
+    lda BACKGROUND_SCROLL_X
+    and #$07
+    sta BACKGROUND_SCROLL_X
+
+    lda X_SCROLL
+    and #$f8
+    ora BACKGROUND_SCROLL_X
+    sta X_SCROLL
+
+    inc BACKGROUND_SCROLL_Y
+    lda BACKGROUND_SCROLL_Y
+    and #$07
+    sta BACKGROUND_SCROLL_Y
+
+    lda Y_SCROLL
+    and #$f8
+    ora BACKGROUND_SCROLL_Y
+    sta Y_SCROLL
+
+    rts
+;------------------------------------------
 
 RASTER_LINE_HIGH_BIT = $d011
 RASTER_LINE = $d012
@@ -119,9 +150,12 @@ entry
     jsr clear
     ;jsr $e544
 
+    jsr scroll
+
     JSR GETIN
     beq +
-    inc BACKGROUND_COLOR
+    
+    ;inc BACKGROUND_COLOR
 
 +   jsr draw_hello_world
     jsr draw_test_text
