@@ -53,22 +53,20 @@ make_sound
 
     +store VOLUME, $0f
 
-    +store VOICE_1_ATTACK_DECAY, $61
-    +store VOICE_1_SUSTAIN_RELEASE, $c8
+    +store VOICE_1_ATTACK_DECAY, $11
+    +store VOICE_1_SUSTAIN_RELEASE, $11
     
     +store VOICE_1_FREQ_LOW, $34
     +store VOICE_1_FREQ_HIGH, $10
     
     +store VOICE_1_CTRL, $21
 
-    ldy #$00
-    ldx #$00
--   inx
-    bne -
-    iny
-    bne -
-
-    +store VOICE_1_CTRL, $20
+;    ldy #$00
+;    ldx #$00
+;-   inx
+;    bne -
+;    iny
+;    bne -
 
     cli
     rts
@@ -112,12 +110,14 @@ entry
     sta BGCOLOR
     sta BORDERCOLOR
 
-    jsr clear
     ;jsr make_sound
+    jsr clear
     ;jsr $e544
 
     jsr draw_hello_world
     jsr draw_test_text
+
+    +store VOICE_1_CTRL, $20
 
 -   lda #32
     cmp RASTER_LINE
