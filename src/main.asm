@@ -14,6 +14,7 @@ SCREENRAM = $0400
 SCREENRAM_1 = $0500
 SCREENRAM_2 = $0600
 SCREENRAM_3 = $0700
+CHAR_COLOR = $d800
 
 ;------------------------------------------
 ; Macros
@@ -80,6 +81,37 @@ BGCOLOR = $d020
 BORDERCOLOR = $d021
 
 ;------------------------------------------
+; void draw_test_text()
+draw_test_text:
+    ldx #0
+draw_test_text_loop
+    txa
+    sta SCREENRAM_1, x
+    sta CHAR_COLOR, x  ; put A as a color at $d800+x. Color RAM only considers the lower 4 bits, 
+                       ; so even though A will be > 15, this will wrap nicely around the 16 available colors
+    inx
+    cpx #27
+    bne draw_test_text_loop
+    rts
+
+;------------------------------------------
+; void draw_hello_world()
+draw_hello_world:
+
+    ldx #$00
+
+draw_hello_world_loop
+    lda hello_world, x
+    beq draw_hello_world_end
+    sta SCREENRAM, x
+    inx
+    jmp draw_hello_world_loop
+draw_hello_world_end
+    rts
+hello_world
+    !scr "hello world!",0    ; our string to display
+
+;------------------------------------------
 ; void entry()
 ; Program entrypoint
 entry
@@ -91,18 +123,8 @@ entry
     jsr make_sound
     ;jsr $e544
 
-    ldx #$00
-
-entry_character_loop
-    lda entry_hello, x
-    beq entry_character_end
-    sta SCREENRAM, x
-    inx
-    jmp entry_character_loop
-entry_character_end
+    jsr draw_hello_world
+    jsr draw_test_text
 
 entry_exit
     jmp entry_exit
-
-entry_hello
-    !scr "hello world!",0    ; our string to display
