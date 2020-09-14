@@ -107,12 +107,10 @@ BORDERCOLOR = $d021
 ;------------------------------------------
 ; void entry()
 ; Program entrypoint
-BACKGROUND_COLOR = *: !byte 0
 entry
-    lda BACKGROUND_COLOR
+    lda #6
     sta BGCOLOR
     sta BORDERCOLOR
-    inc BACKGROUND_COLOR
 
     jsr clear
     ;jsr make_sound
