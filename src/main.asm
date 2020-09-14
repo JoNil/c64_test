@@ -100,6 +100,7 @@ draw_hello_world:
 .hello_world
     !scr "hello world!",0    ; our string to display
 
+RASTER_LINE = $d012
 BGCOLOR = $d020
 BORDERCOLOR = $d021
 
@@ -120,4 +121,7 @@ entry
     jsr draw_hello_world
     jsr draw_test_text
 
+-   lda #32
+    cmp RASTER_LINE
+    bne -
     jmp entry
