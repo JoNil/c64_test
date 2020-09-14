@@ -150,17 +150,18 @@ entry
     jsr clear
     ;jsr $e544
 
+    jsr draw_hello_world
+    jsr draw_test_text
+
+main_loop
     jsr scroll
 
     JSR GETIN
     beq +
     
-    ;inc BACKGROUND_COLOR
+    inc BACKGROUND_COLOR
 
-+   jsr draw_hello_world
-    jsr draw_test_text
-
-    lda #0
++   lda #0
     sta BORDERCOLOR
 
 -   lda #251
@@ -170,4 +171,4 @@ entry
     lda #5
     sta BORDERCOLOR
 
-    jmp entry
+    jmp main_loop
