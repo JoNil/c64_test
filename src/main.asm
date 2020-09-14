@@ -1,5 +1,4 @@
 BASIC = $0801
-
 * = BASIC
     !byte $0b, $08
     !byte $E3
@@ -11,9 +10,9 @@ BASIC = $0801
     !byte $00, $00, $00
 
 SCREENRAM = $0400
-SCREENRAM_1 = $0500
-SCREENRAM_2 = $0600
-SCREENRAM_3 = $0700
+SCREENRAM_1 = SCREENRAM + 250
+SCREENRAM_2 = SCREENRAM + 500
+SCREENRAM_3 = SCREENRAM + 750
 CHAR_COLOR = $d800
 
 ;------------------------------------------
@@ -28,16 +27,14 @@ CHAR_COLOR = $d800
 ; void clear()
 ; Clear the screen
 clear
-    ldx #$00
-
-clear_loop
+    ldx #250
     lda #$20
-    sta SCREENRAM, x
+-   sta SCREENRAM, x
     sta SCREENRAM_1, x
     sta SCREENRAM_2, x
     sta SCREENRAM_3, x
     dex
-    bne clear_loop
+    bne -
     rts
 
 
@@ -66,65 +63,61 @@ make_sound
 
     ldy #$00
     ldx #$00
-make_sound_wait:
-    inx
-    bne make_sound_wait
+-   inx
+    bne -
     iny
-    bne make_sound_wait
+    bne -
 
     +store VOICE_1_CTRL, $20
 
     cli
     rts
 
-BGCOLOR = $d020
-BORDERCOLOR = $d021
-
 ;------------------------------------------
 ; void draw_test_text()
 draw_test_text:
     ldx #0
-draw_test_text_loop
-    txa
+
+-   txa
     sta SCREENRAM_1, x
-    sta CHAR_COLOR, x  ; put A as a color at $d800+x. Color RAM only considers the lower 4 bits, 
-                       ; so even though A will be > 15, this will wrap nicely around the 16 available colors
+    sta CHAR_COLOR + 250, x
     inx
     cpx #27
-    bne draw_test_text_loop
+    bne -
     rts
 
 ;------------------------------------------
 ; void draw_hello_world()
 draw_hello_world:
-
     ldx #$00
 
-draw_hello_world_loop
-    lda hello_world, x
-    beq draw_hello_world_end
+-   lda .hello_world, x
+    beq +
     sta SCREENRAM, x
     inx
-    jmp draw_hello_world_loop
-draw_hello_world_end
-    rts
-hello_world
+    jmp -
++   rts
+.hello_world
     !scr "hello world!",0    ; our string to display
+
+BGCOLOR = $d020
+BORDERCOLOR = $d021
 
 ;------------------------------------------
 ; void entry()
 ; Program entrypoint
+BACKGROUND_COLOR = *: !byte 0
 entry
-    lda #$06
+    lda BACKGROUND_COLOR
     sta BGCOLOR
     sta BORDERCOLOR
+    inc BACKGROUND_COLOR
 
     jsr clear
-    jsr make_sound
+    ;jsr make_sound
     ;jsr $e544
 
     jsr draw_hello_world
     jsr draw_test_text
 
-entry_exit
-    jmp entry_exit
+    jmp entry
