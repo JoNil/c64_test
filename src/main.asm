@@ -68,6 +68,8 @@ make_sound
 ;    iny
 ;    bne -
 
+    +store VOICE_1_CTRL, $20
+
     cli
     rts
 
@@ -75,7 +77,6 @@ make_sound
 ; void draw_test_text()
 draw_test_text:
     ldx #0
-
 -   txa
     sta SCREENRAM_1, x
     sta CHAR_COLOR + 250, x
@@ -98,28 +99,41 @@ draw_hello_world:
 .hello_world
     !scr "hello world!",0    ; our string to display
 
+RASTER_LINE_HIGH_BIT = $d011
 RASTER_LINE = $d012
-BGCOLOR = $d020
-BORDERCOLOR = $d021
+BORDERCOLOR = $d020
+BGCOLOR = $d021
+
+GETIN = $ffe4
 
 ;------------------------------------------
 ; void entry()
 ; Program entrypoint
+BACKGROUND_COLOR = *: !byte 6
 entry
-    lda #6
+
+    lda BACKGROUND_COLOR
     sta BGCOLOR
-    sta BORDERCOLOR
 
     ;jsr make_sound
     jsr clear
     ;jsr $e544
 
-    jsr draw_hello_world
+    JSR GETIN
+    beq +
+    inc BACKGROUND_COLOR
+
++   jsr draw_hello_world
     jsr draw_test_text
 
-    +store VOICE_1_CTRL, $20
+    lda #0
+    sta BORDERCOLOR
 
--   lda #32
+-   lda #251
     cmp RASTER_LINE
     bne -
+
+    lda #5
+    sta BORDERCOLOR
+
     jmp entry
