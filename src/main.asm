@@ -125,14 +125,38 @@ scroll_screen_right_loop
     rts
 ;------------------------------------------
 
+;------------------------------------------
+; void scroll_screen_left()
+scroll_screen_left
+    ldx #0
+
+scroll_screen_left_loop
+    !for row, 0, 24 {
+        lda SCREENRAM + 40 * row + 1, x
+        sta SCREENRAM + 40 * row, x
+        lda CHAR_COLOR + 40 * row + 1, x
+        sta CHAR_COLOR + 40 * row, x
+    }
+    inx
+    cpx #39
+    beq +
+    jmp scroll_screen_left_loop
+
++   lda #$20
+    !for row, 0, 24 {
+        sta SCREENRAM + 40 * row + 39, x
+    }
+
+    rts
+;------------------------------------------
+
 Y_SCROLL = $d011
 X_SCROLL = $d016
 
 ;------------------------------------------
-; void scroll()
+; void scroll_x_plus_1()
 BACKGROUND_SCROLL_X = *: !byte 0
-BACKGROUND_SCROLL_Y = *: !byte 0
-scroll
+scroll_x_plus_1
     inc BACKGROUND_SCROLL_X
     lda BACKGROUND_SCROLL_X
     and #$07
@@ -145,6 +169,35 @@ scroll
     and #$f8
     ora BACKGROUND_SCROLL_X
     sta X_SCROLL
+
+    rts
+;------------------------------------------
+
+;------------------------------------------
+; void scroll_x_neg_1()
+scroll_x_neg_1
+
+    lda BACKGROUND_SCROLL_X
+    bne +
+    jsr scroll_screen_left
+
++   dec BACKGROUND_SCROLL_X
+    lda BACKGROUND_SCROLL_X
+    and #$07
+    sta BACKGROUND_SCROLL_X
+
+    lda X_SCROLL
+    and #$f8
+    ora BACKGROUND_SCROLL_X
+    sta X_SCROLL
+
+    rts
+;------------------------------------------
+
+;------------------------------------------
+; void scroll_y_plus_1()
+BACKGROUND_SCROLL_Y = *: !byte 0
+scroll_y_plus_1
 
     ;inc BACKGROUND_SCROLL_Y
     ;lda BACKGROUND_SCROLL_Y
@@ -186,9 +239,27 @@ main_loop
 
     JSR GETIN
     beq +
-    
+    sta SCREENRAM_3
+
++   cmp #$44 ; Right
+    bne +
+    jsr scroll_x_plus_1
     inc BACKGROUND_COLOR
-    jsr scroll
+
++   cmp #$41 ; Left
+    bne +
+    jsr scroll_x_neg_1
+    inc BACKGROUND_COLOR
+
+;+   cmp #$57 ; Up
+;    bne +
+;    jsr scroll_x_1
+;    inc BACKGROUND_COLOR
+
+;+   cmp #$53 ; Down
+;    bne +
+;    jsr scroll_x_1
+;    inc BACKGROUND_COLOR
 
 +   lda #0
     sta BORDERCOLOR
