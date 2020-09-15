@@ -72,6 +72,7 @@ make_sound
 
     cli
     rts
+;------------------------------------------
 
 ;------------------------------------------
 ; void draw_test_text()
@@ -84,6 +85,7 @@ draw_test_text:
     cpx #27
     bne -
     rts
+;------------------------------------------
 
 ;------------------------------------------
 ; void draw_hello_world()
@@ -96,7 +98,31 @@ draw_hello_world:
     jmp -
 +   rts
 .hello_world
-    !scr "hello world!",0    ; our string to display
+    !scr "hello world!",0
+;------------------------------------------
+
+;------------------------------------------
+; void scroll_screen_right()
+scroll_screen_right
+    ldx #39
+
+scroll_screen_right_loop
+    !for row, 0, 24 {
+        lda SCREENRAM + 40 * row - 1, x
+        sta SCREENRAM + 40 * row, x
+        lda CHAR_COLOR + 40 * row - 1, x
+        sta CHAR_COLOR + 40 * row, x
+    }
+    dex
+    beq +
+    jmp scroll_screen_right_loop
+
++   lda #$20
+    !for row, 0, 24 {
+        sta SCREENRAM + 40 * row, x
+    }
+
+    rts
 ;------------------------------------------
 
 Y_SCROLL = $d011
@@ -112,20 +138,23 @@ scroll
     and #$07
     sta BACKGROUND_SCROLL_X
 
-    lda X_SCROLL
+    bne +
+    jsr scroll_screen_right
+
++   lda X_SCROLL
     and #$f8
     ora BACKGROUND_SCROLL_X
     sta X_SCROLL
 
-    inc BACKGROUND_SCROLL_Y
-    lda BACKGROUND_SCROLL_Y
-    and #$07
-    sta BACKGROUND_SCROLL_Y
+    ;inc BACKGROUND_SCROLL_Y
+    ;lda BACKGROUND_SCROLL_Y
+    ;and #$07
+    ;sta BACKGROUND_SCROLL_Y
 
-    lda Y_SCROLL
-    and #$f8
-    ora BACKGROUND_SCROLL_Y
-    sta Y_SCROLL
+    ;lda Y_SCROLL
+    ;and #$f8
+    ;ora BACKGROUND_SCROLL_Y
+    ;sta Y_SCROLL
 
     rts
 ;------------------------------------------
@@ -154,12 +183,12 @@ entry
     jsr draw_test_text
 
 main_loop
-    jsr scroll
 
     JSR GETIN
     beq +
     
     inc BACKGROUND_COLOR
+    jsr scroll
 
 +   lda #0
     sta BORDERCOLOR
