@@ -27,7 +27,7 @@ CHAR_COLOR = $d800
 ; void clear()
 ; Clear the screen
 clear
-    ldx #250
+    ldx #240
     lda #$20
 -   sta SCREENRAM, x
     sta SCREENRAM_1, x
