@@ -83,7 +83,7 @@ draw_test_text:
     ldx #0
 -   txa
     sta SCREENRAM_1 + 6, x
-    sta CHAR_COLOR + 240 + 6, x
+    ;sta CHAR_COLOR + 240 + 6, x
     inx
     cpx #27
     bne -
@@ -115,8 +115,8 @@ scroll_screen_right
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row - 1, x
         sta SCREENRAM + 40 * row, x
-        lda CHAR_COLOR + 40 * row - 1, x
-        sta CHAR_COLOR + 40 * row, x
+        ;lda CHAR_COLOR + 40 * row - 1, x
+        ;sta CHAR_COLOR + 40 * row, x
     }
     dex
     beq +
@@ -124,7 +124,7 @@ scroll_screen_right
 
 +   lda #$20
     !for row, 0, 24 {
-        sta SCREENRAM + 40 * row, x
+        sta SCREENRAM + 40 * row
     }
 
     rts
@@ -140,8 +140,8 @@ scroll_screen_left
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row + 1, x
         sta SCREENRAM + 40 * row, x
-        lda CHAR_COLOR + 40 * row + 1, x
-        sta CHAR_COLOR + 40 * row, x
+        ;lda CHAR_COLOR + 40 * row + 1, x
+        ;sta CHAR_COLOR + 40 * row, x
     }
     inx
     cpx #39
@@ -150,7 +150,7 @@ scroll_screen_left
 
 +   lda #$20
     !for row, 0, 24 {
-        sta SCREENRAM + 40 * row + 39, x
+        sta SCREENRAM + 40 * row + 39
     }
 
     rts
