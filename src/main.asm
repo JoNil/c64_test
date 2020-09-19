@@ -115,21 +115,12 @@ scroll_screen_right
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row - 1, x
         sta SCREENRAM + 40 * row, x
-    }
-    dex
-    beq +
-    jmp .loop_1
-
-+   ldx #39
-
-.loop_2
-    !for row, 0, 24 {
         lda CHAR_COLOR + 40 * row - 1, x
         sta CHAR_COLOR + 40 * row, x
     }
     dex
     beq +
-    jmp .loop_2
+    jmp .loop_1
 
 +   lda #$20
     !for row, 0, 24 {
@@ -149,24 +140,13 @@ scroll_screen_left
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row + 1, x
         sta SCREENRAM + 40 * row, x
-        
-    }
-    inx
-    cpx #39
-    beq +
-    jmp .loop
-
-+   ldx #0
-
-.loop_2
-    !for row, 0, 24 {
         lda CHAR_COLOR + 40 * row + 1, x
         sta CHAR_COLOR + 40 * row, x
     }
     inx
     cpx #39
     beq +
-    jmp .loop_2
+    jmp .loop
 
 +   lda #$20
     !for row, 0, 24 {
