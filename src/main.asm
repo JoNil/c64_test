@@ -80,7 +80,7 @@ draw_test_text:
     ldx #0
 -   txa
     sta SCREENRAM_1 + 6, x
-    sta CHAR_COLOR + 240 + 6, x
+    ;sta CHAR_COLOR + 240 + 6, x
     inx
     cpx #27
     bne -
@@ -110,8 +110,8 @@ scroll_screen_right_loop
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row - 1, x
         sta SCREENRAM + 40 * row, x
-        lda CHAR_COLOR + 40 * row - 1, x
-        sta CHAR_COLOR + 40 * row, x
+        ;lda CHAR_COLOR + 40 * row - 1, x
+        ;sta CHAR_COLOR + 40 * row, x
     }
     dex
     beq +
@@ -134,8 +134,8 @@ scroll_screen_left_loop
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row + 1, x
         sta SCREENRAM + 40 * row, x
-        lda CHAR_COLOR + 40 * row + 1, x
-        sta CHAR_COLOR + 40 * row, x
+        ;lda CHAR_COLOR + 40 * row + 1, x
+        ;sta CHAR_COLOR + 40 * row, x
     }
     inx
     cpx #39
@@ -162,26 +162,23 @@ scroll_x_plus_1
     and #$07
     sta BACKGROUND_SCROLL_X
 
-    bne +
-    jsr scroll_screen_right
-
-+   lda X_SCROLL
+    lda X_SCROLL
     and #$f8
     ora BACKGROUND_SCROLL_X
     sta X_SCROLL
 
-    rts
+    lda BACKGROUND_SCROLL_X
+    bne +
+    jsr scroll_screen_right
+
++   rts
 ;------------------------------------------
 
 ;------------------------------------------
 ; void scroll_x_neg_1()
 scroll_x_neg_1
 
-    lda BACKGROUND_SCROLL_X
-    bne +
-    jsr scroll_screen_left
-
-+   dec BACKGROUND_SCROLL_X
+    dec BACKGROUND_SCROLL_X
     lda BACKGROUND_SCROLL_X
     and #$07
     sta BACKGROUND_SCROLL_X
@@ -191,7 +188,12 @@ scroll_x_neg_1
     ora BACKGROUND_SCROLL_X
     sta X_SCROLL
 
-    rts
+    lda BACKGROUND_SCROLL_X
+    cmp #7
+    bne +
+    jsr scroll_screen_left
+
++   rts
 ;------------------------------------------
 
 ;------------------------------------------
@@ -239,7 +241,7 @@ main_loop
 
     JSR GETIN
     beq +
-    sta SCREENRAM_3
+    sta SCREENRAM_3 + 8
 
 +   cmp #$44 ; Right
     bne +
