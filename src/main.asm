@@ -26,6 +26,7 @@ CHAR_COLOR = $d800
 ;------------------------------------------
 ; void clear()
 ; Clear the screen
+!zone {
 clear
     ldx #240
     lda #$20
@@ -36,7 +37,7 @@ clear
     dex
     bne -
     rts
-;------------------------------------------
+}
 
 VOLUME = $d418
 VOICE_1_FREQ_LOW = $d400
@@ -48,6 +49,7 @@ VOICE_1_SUSTAIN_RELEASE = $d406
 ;------------------------------------------
 ; void make_sound()
 ; Sound!
+!zone {
 make_sound
     sei
 
@@ -72,23 +74,25 @@ make_sound
 
     cli
     rts
-;------------------------------------------
+}
 
 ;------------------------------------------
 ; void draw_test_text()
+!zone {
 draw_test_text:
     ldx #0
 -   txa
     sta SCREENRAM_1 + 6, x
-    ;sta CHAR_COLOR + 240 + 6, x
+    sta CHAR_COLOR + 240 + 6, x
     inx
     cpx #27
     bne -
     rts
-;------------------------------------------
+}
 
 ;------------------------------------------
 ; void draw_hello_world()
+!zone {
 draw_hello_world:
     ldx #$00
 -   lda .hello_world, x
@@ -99,23 +103,33 @@ draw_hello_world:
 +   rts
 .hello_world
     !scr "hello world!",0
-;------------------------------------------
+}
 
 ;------------------------------------------
 ; void scroll_screen_right()
+!zone {
 scroll_screen_right
     ldx #39
 
-scroll_screen_right_loop
+.loop_1
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row - 1, x
         sta SCREENRAM + 40 * row, x
-        ;lda CHAR_COLOR + 40 * row - 1, x
-        ;sta CHAR_COLOR + 40 * row, x
     }
     dex
     beq +
-    jmp scroll_screen_right_loop
+    jmp .loop_1
+
++   ldx #39
+
+.loop_2
+    !for row, 0, 24 {
+        lda CHAR_COLOR + 40 * row - 1, x
+        sta CHAR_COLOR + 40 * row, x
+    }
+    dex
+    beq +
+    jmp .loop_2
 
 +   lda #$20
     !for row, 0, 24 {
@@ -123,24 +137,36 @@ scroll_screen_right_loop
     }
 
     rts
-;------------------------------------------
+}
 
 ;------------------------------------------
 ; void scroll_screen_left()
+!zone {
 scroll_screen_left
     ldx #0
 
-scroll_screen_left_loop
+.loop
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row + 1, x
         sta SCREENRAM + 40 * row, x
-        ;lda CHAR_COLOR + 40 * row + 1, x
-        ;sta CHAR_COLOR + 40 * row, x
+        
     }
     inx
     cpx #39
     beq +
-    jmp scroll_screen_left_loop
+    jmp .loop
+
++   ldx #0
+
+.loop_2
+    !for row, 0, 24 {
+        lda CHAR_COLOR + 40 * row + 1, x
+        sta CHAR_COLOR + 40 * row, x
+    }
+    inx
+    cpx #39
+    beq +
+    jmp .loop_2
 
 +   lda #$20
     !for row, 0, 24 {
@@ -148,13 +174,14 @@ scroll_screen_left_loop
     }
 
     rts
-;------------------------------------------
+}
 
 Y_SCROLL = $d011
 X_SCROLL = $d016
 
 ;------------------------------------------
 ; void scroll_x_plus_1()
+!zone {
 BACKGROUND_SCROLL_X = *: !byte 0
 scroll_x_plus_1
     inc BACKGROUND_SCROLL_X
@@ -172,10 +199,11 @@ scroll_x_plus_1
     jsr scroll_screen_right
 
 +   rts
-;------------------------------------------
+}
 
 ;------------------------------------------
 ; void scroll_x_neg_1()
+!zone {
 scroll_x_neg_1
 
     dec BACKGROUND_SCROLL_X
@@ -194,10 +222,11 @@ scroll_x_neg_1
     jsr scroll_screen_left
 
 +   rts
-;------------------------------------------
+}
 
 ;------------------------------------------
 ; void scroll_y_plus_1()
+!zone {
 BACKGROUND_SCROLL_Y = *: !byte 0
 scroll_y_plus_1
 
@@ -212,7 +241,7 @@ scroll_y_plus_1
     ;sta Y_SCROLL
 
     rts
-;------------------------------------------
+}
 
 RASTER_LINE_HIGH_BIT = $d011
 RASTER_LINE = $d012
@@ -225,6 +254,7 @@ GETIN = $ffe4
 ; void entry()
 ; Program entrypoint
 BACKGROUND_COLOR = *: !byte 6
+!zone {
 entry
 
     lda BACKGROUND_COLOR
@@ -237,8 +267,7 @@ entry
     jsr draw_hello_world
     jsr draw_test_text
 
-main_loop
-
+.loop
     JSR GETIN
     beq +
     sta SCREENRAM_3 + 8
@@ -266,6 +295,7 @@ main_loop
 +   lda #0
     sta BORDERCOLOR
 
+    ; Wait for v sync
 -   lda #251
     cmp RASTER_LINE
     bne -
@@ -273,4 +303,5 @@ main_loop
     lda #5
     sta BORDERCOLOR
 
-    jmp main_loop
+    jmp .loop
+}
