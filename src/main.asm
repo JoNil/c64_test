@@ -10,9 +10,9 @@ BASIC = $0801
     !byte $00, $00, $00
 
 SCREENRAM = $0400
-SCREENRAM_1 = SCREENRAM + 250
-SCREENRAM_2 = SCREENRAM + 500
-SCREENRAM_3 = SCREENRAM + 750
+SCREENRAM_1 = SCREENRAM + 240
+SCREENRAM_2 = SCREENRAM + 480
+SCREENRAM_3 = SCREENRAM + 720
 CHAR_COLOR = $d800
 
 ;------------------------------------------
@@ -79,8 +79,8 @@ make_sound
 draw_test_text:
     ldx #0
 -   txa
-    sta SCREENRAM_1, x
-    sta CHAR_COLOR + 250, x
+    sta SCREENRAM_1 + 6, x
+    sta CHAR_COLOR + 240 + 6, x
     inx
     cpx #27
     bne -
