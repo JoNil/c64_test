@@ -315,7 +315,7 @@ entry
 +   lda #0
     sta BORDERCOLOR
 
-    ; Wait for v sync
+; Wait for v-sync
 -   lda #251
     cmp RASTER_LINE
     bne -
