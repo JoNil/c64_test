@@ -156,13 +156,65 @@ scroll_screen_left
     rts
 }
 
+;------------------------------------------
+; void scroll_screen_up()
+!zone {
+scroll_screen_up
+    ldx #0
+
+.loop
+    !for row, 0, 24 {
+        lda SCREENRAM + 40 * row + 40, x
+        sta SCREENRAM + 40 * row, x
+        ;lda CHAR_COLOR + 40 * row + 40, x
+        ;sta CHAR_COLOR + 40 * row, x
+    }
+    inx
+    cpx #40
+    beq +
+    jmp .loop
+
++   lda #$20
+    !for col, 0, 39 {
+        sta SCREENRAM + 40 * 24 + col
+    }
+
+    rts
+}
+
+;------------------------------------------
+; void scroll_screen_down()
+!zone {
+scroll_screen_down
+    
+    ldx #0
+.loop
+    !for row, 0, 24 {
+        lda SCREENRAM + 40 * (23 - row), x
+        sta SCREENRAM + 40 * (24 - row), x
+    }
+    inx
+    cpx #40
+    beq +
+    jmp .loop
+
++   lda #$20
+    !for col, 0, 39 {
+        sta SCREENRAM + col
+    }
+
+    rts
+}
+
 Y_SCROLL = $d011
 X_SCROLL = $d016
+
+BACKGROUND_SCROLL_X = *: !byte 0
+BACKGROUND_SCROLL_Y = *: !byte 0
 
 ;------------------------------------------
 ; void scroll_x_plus_1()
 !zone {
-BACKGROUND_SCROLL_X = *: !byte 0
 scroll_x_plus_1
     inc BACKGROUND_SCROLL_X
     lda BACKGROUND_SCROLL_X
@@ -207,20 +259,46 @@ scroll_x_neg_1
 ;------------------------------------------
 ; void scroll_y_plus_1()
 !zone {
-BACKGROUND_SCROLL_Y = *: !byte 0
 scroll_y_plus_1
 
-    ;inc BACKGROUND_SCROLL_Y
-    ;lda BACKGROUND_SCROLL_Y
-    ;and #$07
-    ;sta BACKGROUND_SCROLL_Y
+    inc BACKGROUND_SCROLL_Y
+    lda BACKGROUND_SCROLL_Y
+    and #$07
+    sta BACKGROUND_SCROLL_Y
 
-    ;lda Y_SCROLL
-    ;and #$f8
-    ;ora BACKGROUND_SCROLL_Y
-    ;sta Y_SCROLL
+    lda Y_SCROLL
+    and #$f8
+    ora BACKGROUND_SCROLL_Y
+    sta Y_SCROLL
 
-    rts
+    lda BACKGROUND_SCROLL_Y
+    bne +
+    jsr scroll_screen_down
+
++   rts
+}
+
+;------------------------------------------
+; void scroll_y_neg_1()
+!zone {
+scroll_y_neg_1
+
+    dec BACKGROUND_SCROLL_Y
+    lda BACKGROUND_SCROLL_Y
+    and #$07
+    sta BACKGROUND_SCROLL_Y
+
+    lda Y_SCROLL
+    and #$f8
+    ora BACKGROUND_SCROLL_Y
+    sta Y_SCROLL
+
+    lda BACKGROUND_SCROLL_Y
+    cmp #7
+    bne +
+    jsr scroll_screen_up
+
++   rts
 }
 
 ;------------------------------------------
@@ -228,7 +306,6 @@ scroll_y_plus_1
 !zone {
 right_pressed
     jsr scroll_x_plus_1
-    inc BACKGROUND_COLOR
     rts
 }
 
@@ -237,7 +314,6 @@ right_pressed
 !zone {
 left_pressed
     jsr scroll_x_neg_1
-    inc BACKGROUND_COLOR
     rts
 }
 
@@ -245,7 +321,7 @@ left_pressed
 ; void up_pressed()
 !zone {
 up_pressed
-
+    jsr scroll_y_neg_1
     rts
 }
 
@@ -253,10 +329,9 @@ up_pressed
 ; void down_pressed()
 !zone {
 down_pressed
-
+    jsr scroll_y_plus_1
     rts
 }
-
 
 RASTER_LINE_HIGH_BIT = $d011
 RASTER_LINE          = $d012
@@ -273,12 +348,12 @@ DDRB = $dc03 ; CIA#1 (Data Direction Register B)
 ;------------------------------------------
 ; void entry()
 ; Program entrypoint
-BACKGROUND_COLOR = *: !byte 6
+BACKGROUND_COLOR = *: !byte 0
 !zone {
 entry
     sei
 
-    lda BACKGROUND_COLOR
+    lda #6
     sta BGCOLOR
 
     ;jsr make_sound
@@ -304,15 +379,31 @@ entry
     bne +
     jsr right_pressed
 
-+ ; Check A
-    lda #%11111101
+; Check A
++   lda #%11111101
     sta PRA 
     lda PRB
     and #%00000100
     bne +
     jsr left_pressed
 
-+   lda #0
+; Check W
++   lda #%11111101
+    sta PRA 
+    lda PRB
+    and #%00000010
+    bne +
+    jsr up_pressed
+
+; Check S
++   lda #%11111101
+    sta PRA 
+    lda PRB
+    and #%00100000
+    bne +
+    jsr down_pressed
+
++   lda BACKGROUND_COLOR
     sta BORDERCOLOR
 
 ; Wait for v-sync
