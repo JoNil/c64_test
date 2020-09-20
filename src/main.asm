@@ -163,7 +163,7 @@ scroll_screen_up
     ldx #0
 
 .loop
-    !for row, 0, 24 {
+    !for row, 1, 24 {
         lda SCREENRAM + 40 * row + 40, x
         sta SCREENRAM + 40 * row, x
         ;lda CHAR_COLOR + 40 * row + 40, x
@@ -189,7 +189,7 @@ scroll_screen_down
     
     ldx #0
 .loop
-    !for row, 0, 24 {
+    !for row, 0, 23 {
         lda SCREENRAM + 40 * (23 - row), x
         sta SCREENRAM + 40 * (24 - row), x
     }
