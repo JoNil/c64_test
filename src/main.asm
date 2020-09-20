@@ -223,12 +223,52 @@ scroll_y_plus_1
     rts
 }
 
+;------------------------------------------
+; void right_pressed()
+!zone {
+right_pressed
+    jsr scroll_x_plus_1
+    inc BACKGROUND_COLOR
+    rts
+}
+
+;------------------------------------------
+; void left_pressed()
+!zone {
+left_pressed
+    jsr scroll_x_neg_1
+    inc BACKGROUND_COLOR
+    rts
+}
+
+;------------------------------------------
+; void up_pressed()
+!zone {
+up_pressed
+
+    rts
+}
+
+;------------------------------------------
+; void down_pressed()
+!zone {
+down_pressed
+
+    rts
+}
+
+
 RASTER_LINE_HIGH_BIT = $d011
-RASTER_LINE = $d012
-BORDERCOLOR = $d020
-BGCOLOR = $d021
+RASTER_LINE          = $d012
+BORDERCOLOR          = $d020
+BGCOLOR              = $d021
 
 GETIN = $ffe4
+
+PRA  = $dc00 ; CIA#1 (Port Register A)
+PRB  = $dc01 ; CIA#1 (Port Register B)
+DDRA = $dc02 ; CIA#1 (Data Direction Register A)
+DDRB = $dc03 ; CIA#1 (Data Direction Register B)
 
 ;------------------------------------------
 ; void entry()
@@ -236,6 +276,7 @@ GETIN = $ffe4
 BACKGROUND_COLOR = *: !byte 6
 !zone {
 entry
+    sei
 
     lda BACKGROUND_COLOR
     sta BGCOLOR
@@ -248,29 +289,28 @@ entry
     jsr draw_test_text
 
 .loop
-    JSR GETIN
-    beq +
-    sta SCREENRAM_3 + 8
 
-+   cmp #$44 ; Right
+.check_keyboard              
+    lda #%11111111  ; CIA#1 Port A set to output 
+    sta DDRA             
+    lda #%00000000  ; CIA#1 Port B set to input
+    sta DDRB
+
+; Check D
+    lda #%11111011
+    sta PRA
+    lda PRB
+    and #%00000100
     bne +
-    jsr scroll_x_plus_1
-    inc BACKGROUND_COLOR
+    jsr right_pressed
 
-+   cmp #$41 ; Left
++ ; Check A
+    lda #%11111101
+    sta PRA 
+    lda PRB
+    and #%00000100
     bne +
-    jsr scroll_x_neg_1
-    inc BACKGROUND_COLOR
-
-;+   cmp #$57 ; Up
-;    bne +
-;    jsr scroll_x_1
-;    inc BACKGROUND_COLOR
-
-;+   cmp #$53 ; Down
-;    bne +
-;    jsr scroll_x_1
-;    inc BACKGROUND_COLOR
+    jsr left_pressed
 
 +   lda #0
     sta BORDERCOLOR
