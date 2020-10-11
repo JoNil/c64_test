@@ -1,13 +1,13 @@
 BASIC = $0801
 * = BASIC
-    !byte $0b, $08
-    !byte $E3
-    !byte $07, $9E
-    !byte '0' + entry % 10000 / 1000        
-    !byte '0' + entry %  1000 /  100        
-    !byte '0' + entry %   100 /   10        
-    !byte '0' + entry %    10             
-    !byte $00, $00, $00
+!byte $0b, $08
+!byte $E3
+!byte $07, $9E
+!byte '0' + entry % 10000 / 1000        
+!byte '0' + entry %  1000 /  100        
+!byte '0' + entry %   100 /   10        
+!byte '0' + entry %    10             
+!byte $00, $00, $00
 
 ; Constants
 
@@ -15,25 +15,22 @@ SCREENRAM = $0400
 SCREENRAM_1 = SCREENRAM + 240
 SCREENRAM_2 = SCREENRAM + 480
 SCREENRAM_3 = SCREENRAM + 720
-CHAR_COLOR = $d800
-
-GETIN = $ffe4
-
-COLOR_SCREEN = 0
-COLOR_CHAR_DEF = 8
-COLOR_CHAR_MC1 = 11
-COLOR_CHAR_MC2 = 7
-CHAR_COUNT = 25
 
 VIC_Y_SCROLL             = $d011
 VIC_RASTER_LINE_HIGH_BIT = $d011
 VIC_RASTER_LINE          = $d012
 VIC_X_SCROLL             = $d016
+VIC_CHAR_PTR             = $d018
 VIC_BORDER_COLOR         = $d020
 VIC_BGCOLOR              = $d021
 VIC_MULTI_COLOR_1        = $d022
 VIC_MULTI_COLOR_2        = $d023
-VIC_CR2                  = $D016
+VIC_CR2                  = $d016
+
+CIA_PRA  = $dc00 ; CIA#1 (Port Register A)
+CIA_PRB  = $dc01 ; CIA#1 (Port Register B)
+CIA_DDRA = $dc02 ; CIA#1 (Data Direction Register A)
+CIA_DDRB = $dc03 ; CIA#1 (Data Direction Register B)
 
 SID_VOICE_1_FREQ_LOW        = $d400
 SID_VOICE_1_FREQ_HIGH       = $d401
@@ -42,10 +39,8 @@ SID_VOICE_1_ATTACK_DECAY    = $d405
 SID_VOICE_1_SUSTAIN_RELEASE = $d406
 SID_VOLUME                  = $d418
 
-CIA_PRA  = $dc00 ; CIA#1 (Port Register A)
-CIA_PRB  = $dc01 ; CIA#1 (Port Register B)
-CIA_DDRA = $dc02 ; CIA#1 (Data Direction Register A)
-CIA_DDRB = $dc03 ; CIA#1 (Data Direction Register B)
+CHAR_COLOR = $d800
+GETIN = $ffe4
 
 ;------------------------------------------
 ; Macros
@@ -114,7 +109,7 @@ make_sound
 ; void draw_test_text()
 !zone {
 draw_test_text:
-    ldx #0
+    ldx #$0
 -   txa
     sta SCREENRAM_1 + 6, x
     ;sta CHAR_COLOR + 240 + 6, x
@@ -128,7 +123,7 @@ draw_test_text:
 ; void draw_hello_world()
 !zone {
 draw_hello_world:
-    ldx #$00
+    ldx #$0
 -   lda .hello_world, x
     beq +
     sta SCREENRAM, x
@@ -156,7 +151,7 @@ scroll_screen_right
     beq +
     jmp .loop
 
-+   lda #$20
++   lda #$0
     !for row, 0, 24 {
         sta SCREENRAM + 40 * row
     }
@@ -168,7 +163,7 @@ scroll_screen_right
 ; void scroll_screen_left()
 !zone {
 scroll_screen_left
-    ldx #0
+    ldx #$0
 
 .loop
     !for row, 0, 24 {
@@ -182,7 +177,7 @@ scroll_screen_left
     beq +
     jmp .loop
 
-+   lda #$20
++   lda #$0
     !for row, 0, 24 {
         sta SCREENRAM + 40 * row + 39
     }
@@ -194,7 +189,7 @@ scroll_screen_left
 ; void scroll_screen_up()
 !zone {
 scroll_screen_up
-    ldx #0
+    ldx #$0
 
 .loop
     !for row, 1, 24 {
@@ -208,7 +203,7 @@ scroll_screen_up
     beq +
     jmp .loop
 
-+   lda #$20
++   lda #$0
     !for col, 0, 39 {
         sta SCREENRAM + 40 * 24 + col
     }
@@ -221,7 +216,7 @@ scroll_screen_up
 !zone {
 scroll_screen_down
     
-    ldx #0
+    ldx #$0
 .loop
     !for row, 0, 23 {
         lda SCREENRAM + 40 * (23 - row), x
@@ -232,15 +227,13 @@ scroll_screen_down
     beq +
     jmp .loop
 
-+   lda #$20
++   lda #$0
     !for col, 0, 39 {
         sta SCREENRAM + col
     }
 
     rts
 }
-
-
 
 BACKGROUND_SCROLL_X = *: !byte 0
 BACKGROUND_SCROLL_Y = *: !byte 0
@@ -374,21 +367,23 @@ BACKGROUND_COLOR = *: !byte 0
 entry
     sei
 
-    lda #6
+    ; Set background color
+    lda #$0
     sta VIC_BGCOLOR
+    lda #11
+    sta VIC_MULTI_COLOR_1
+    lda #7
+    sta VIC_MULTI_COLOR_2
 
     ; Enable multi color mode
     lda VIC_CR2
-    ora $10
+    ora #$10
     sta VIC_CR2
 
-    ; Set multi color 1 and 2
-    lda COLOR_CHAR_MC1
-    sta VIC_MULTI_COLOR_1
-
-    lda COLOR_CHAR_MC2
-    sta VIC_MULTI_COLOR_2
-
+    ; Set char data at $3800
+    lda VIC_CHAR_PTR
+    ora #$0e
+    sta VIC_CHAR_PTR
 
     ;jsr make_sound
     ;jsr clear
@@ -452,8 +447,7 @@ entry
 }
 
 ; Charset Data
-CHARSET_DATA_SIZE = 200
-CHARSET_DATA = *
+* = $3800
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$55,$59,$59,$65,$65,$59,$59,$55
 !byte $55,$55,$69,$69,$96,$96,$55,$55,$55,$65,$65,$59,$59,$65,$65,$55
 !byte $55,$55,$96,$96,$69,$69,$55,$55,$50,$54,$64,$65,$a5,$a5,$55,$55
@@ -469,7 +463,7 @@ CHARSET_DATA = *
 !byte $55,$55,$55,$55,$56,$16,$16,$06
 
 ; Map Data
-* = $0400
+* = SCREENRAM
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00

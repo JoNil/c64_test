@@ -15,3 +15,5 @@ cargo rustc --release -- -C opt-level="z" -C codegen-units=1 --target=i586-unkno
 - http://1amstudios.com/2014/12/07/c64-smooth-scrolling/
 - http://www.zimmers.net/cbmpics/cbm/c64/c64prg.txt
 - https://www.commodore.ca/manuals/c64_programmers_reference/c64-programmers_reference_guide-03-programming_graphics.pdf
+- http://sta.c64.org/cbm64mem.html
+- https://en.wikipedia.org/wiki/MOS_Technology_VIC-II
