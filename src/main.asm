@@ -9,11 +9,43 @@ BASIC = $0801
     !byte '0' + entry %    10             
     !byte $00, $00, $00
 
+; Constants
+
 SCREENRAM = $0400
 SCREENRAM_1 = SCREENRAM + 240
 SCREENRAM_2 = SCREENRAM + 480
 SCREENRAM_3 = SCREENRAM + 720
 CHAR_COLOR = $d800
+
+GETIN = $ffe4
+
+COLOR_SCREEN = 0
+COLOR_CHAR_DEF = 8
+COLOR_CHAR_MC1 = 11
+COLOR_CHAR_MC2 = 7
+CHAR_COUNT = 25
+
+VIC_Y_SCROLL             = $d011
+VIC_RASTER_LINE_HIGH_BIT = $d011
+VIC_RASTER_LINE          = $d012
+VIC_X_SCROLL             = $d016
+VIC_BORDER_COLOR         = $d020
+VIC_BGCOLOR              = $d021
+VIC_MULTI_COLOR_1        = $d022
+VIC_MULTI_COLOR_2        = $d023
+VIC_CR2                  = $D016
+
+SID_VOICE_1_FREQ_LOW        = $d400
+SID_VOICE_1_FREQ_HIGH       = $d401
+SID_VOICE_1_CTRL            = $d404
+SID_VOICE_1_ATTACK_DECAY    = $d405
+SID_VOICE_1_SUSTAIN_RELEASE = $d406
+SID_VOLUME                  = $d418
+
+CIA_PRA  = $dc00 ; CIA#1 (Port Register A)
+CIA_PRB  = $dc01 ; CIA#1 (Port Register B)
+CIA_DDRA = $dc02 ; CIA#1 (Data Direction Register A)
+CIA_DDRB = $dc03 ; CIA#1 (Data Direction Register B)
 
 ;------------------------------------------
 ; Macros
@@ -39,12 +71,14 @@ clear
     rts
 }
 
-VOLUME = $d418
-VOICE_1_FREQ_LOW = $d400
-VOICE_1_FREQ_HIGH = $d401
-VOICE_1_CTRL = $d404
-VOICE_1_ATTACK_DECAY = $d405
-VOICE_1_SUSTAIN_RELEASE = $d406
+;------------------------------------------
+; void memcpy()
+; Clear the screen
+!zone {
+memcpy
+    
+    rts
+}
 
 ;------------------------------------------
 ; void make_sound()
@@ -53,15 +87,15 @@ VOICE_1_SUSTAIN_RELEASE = $d406
 make_sound
     sei
 
-    +store VOLUME, $0f
+    +store SID_VOLUME, $0f
 
-    +store VOICE_1_ATTACK_DECAY, $11
-    +store VOICE_1_SUSTAIN_RELEASE, $11
+    +store SID_VOICE_1_ATTACK_DECAY, $11
+    +store SID_VOICE_1_SUSTAIN_RELEASE, $11
     
-    +store VOICE_1_FREQ_LOW, $34
-    +store VOICE_1_FREQ_HIGH, $10
+    +store SID_VOICE_1_FREQ_LOW, $34
+    +store SID_VOICE_1_FREQ_HIGH, $10
     
-    +store VOICE_1_CTRL, $21
+    +store SID_VOICE_1_CTRL, $21
 
 ;    ldy #$00
 ;    ldx #$00
@@ -70,7 +104,7 @@ make_sound
 ;    iny
 ;    bne -
 
-    +store VOICE_1_CTRL, $20
+    +store SID_VOICE_1_CTRL, $20
 
     cli
     rts
@@ -111,7 +145,7 @@ draw_hello_world:
 scroll_screen_right
     ldx #39
 
-.loop_1
+.loop
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row - 1, x
         sta SCREENRAM + 40 * row, x
@@ -120,7 +154,7 @@ scroll_screen_right
     }
     dex
     beq +
-    jmp .loop_1
+    jmp .loop
 
 +   lda #$20
     !for row, 0, 24 {
@@ -206,8 +240,7 @@ scroll_screen_down
     rts
 }
 
-Y_SCROLL = $d011
-X_SCROLL = $d016
+
 
 BACKGROUND_SCROLL_X = *: !byte 0
 BACKGROUND_SCROLL_Y = *: !byte 0
@@ -221,10 +254,10 @@ scroll_x_plus_1
     and #$07
     sta BACKGROUND_SCROLL_X
 
-    lda X_SCROLL
+    lda VIC_X_SCROLL
     and #$f8
     ora BACKGROUND_SCROLL_X
-    sta X_SCROLL
+    sta VIC_X_SCROLL
 
     lda BACKGROUND_SCROLL_X
     bne +
@@ -243,10 +276,10 @@ scroll_x_neg_1
     and #$07
     sta BACKGROUND_SCROLL_X
 
-    lda X_SCROLL
+    lda VIC_X_SCROLL
     and #$f8
     ora BACKGROUND_SCROLL_X
-    sta X_SCROLL
+    sta VIC_X_SCROLL
 
     lda BACKGROUND_SCROLL_X
     cmp #7
@@ -266,10 +299,10 @@ scroll_y_plus_1
     and #$07
     sta BACKGROUND_SCROLL_Y
 
-    lda Y_SCROLL
+    lda VIC_Y_SCROLL
     and #$f8
     ora BACKGROUND_SCROLL_Y
-    sta Y_SCROLL
+    sta VIC_Y_SCROLL
 
     lda BACKGROUND_SCROLL_Y
     bne +
@@ -288,10 +321,10 @@ scroll_y_neg_1
     and #$07
     sta BACKGROUND_SCROLL_Y
 
-    lda Y_SCROLL
+    lda VIC_Y_SCROLL
     and #$f8
     ora BACKGROUND_SCROLL_Y
-    sta Y_SCROLL
+    sta VIC_Y_SCROLL
 
     lda BACKGROUND_SCROLL_Y
     cmp #7
@@ -333,18 +366,6 @@ down_pressed
     rts
 }
 
-RASTER_LINE_HIGH_BIT = $d011
-RASTER_LINE          = $d012
-BORDERCOLOR          = $d020
-BGCOLOR              = $d021
-
-GETIN = $ffe4
-
-PRA  = $dc00 ; CIA#1 (Port Register A)
-PRB  = $dc01 ; CIA#1 (Port Register B)
-DDRA = $dc02 ; CIA#1 (Data Direction Register A)
-DDRB = $dc03 ; CIA#1 (Data Direction Register B)
-
 ;------------------------------------------
 ; void entry()
 ; Program entrypoint
@@ -354,65 +375,161 @@ entry
     sei
 
     lda #6
-    sta BGCOLOR
+    sta VIC_BGCOLOR
+
+    ; Enable multi color mode
+    lda VIC_CR2
+    ora $10
+    sta VIC_CR2
+
+    ; Set multi color 1 and 2
+    lda COLOR_CHAR_MC1
+    sta VIC_MULTI_COLOR_1
+
+    lda COLOR_CHAR_MC2
+    sta VIC_MULTI_COLOR_2
+
 
     ;jsr make_sound
-    jsr clear
+    ;jsr clear
     ;jsr $e544
 
-    jsr draw_hello_world
-    jsr draw_test_text
+    ;jsr draw_hello_world
+    ;jsr draw_test_text
 
 .loop
 
 .check_keyboard              
     lda #%11111111  ; CIA#1 Port A set to output 
-    sta DDRA             
+    sta CIA_DDRA             
     lda #%00000000  ; CIA#1 Port B set to input
-    sta DDRB
+    sta CIA_DDRB
 
 ; Check D
     lda #%11111011
-    sta PRA
-    lda PRB
+    sta CIA_PRA
+    lda CIA_PRB
     and #%00000100
     bne +
     jsr right_pressed
 
 ; Check A
 +   lda #%11111101
-    sta PRA 
-    lda PRB
+    sta CIA_PRA 
+    lda CIA_PRB
     and #%00000100
     bne +
     jsr left_pressed
 
 ; Check W
 +   lda #%11111101
-    sta PRA 
-    lda PRB
+    sta CIA_PRA 
+    lda CIA_PRB
     and #%00000010
     bne +
     jsr up_pressed
 
 ; Check S
 +   lda #%11111101
-    sta PRA 
-    lda PRB
+    sta CIA_PRA 
+    lda CIA_PRB
     and #%00100000
     bne +
     jsr down_pressed
 
 +   lda BACKGROUND_COLOR
-    sta BORDERCOLOR
+    sta VIC_BORDER_COLOR
 
 ; Wait for v-sync
 -   lda #251
-    cmp RASTER_LINE
+    cmp VIC_RASTER_LINE
     bne -
 
     lda #5
-    sta BORDERCOLOR
+    sta VIC_BORDER_COLOR
 
     jmp .loop
 }
+
+; Charset Data
+CHARSET_DATA_SIZE = 200
+CHARSET_DATA = *
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$55,$59,$59,$65,$65,$59,$59,$55
+!byte $55,$55,$69,$69,$96,$96,$55,$55,$55,$65,$65,$59,$59,$65,$65,$55
+!byte $55,$55,$96,$96,$69,$69,$55,$55,$50,$54,$64,$65,$a5,$a5,$55,$55
+!byte $65,$65,$69,$69,$55,$54,$54,$50,$05,$15,$15,$55,$69,$69,$59,$59
+!byte $55,$55,$5a,$5a,$59,$19,$15,$05,$55,$65,$65,$95,$95,$65,$65,$55
+!byte $69,$69,$96,$96,$55,$55,$55,$55,$55,$59,$59,$56,$56,$59,$59,$55
+!byte $55,$55,$55,$55,$96,$96,$69,$69,$50,$54,$54,$55,$59,$59,$69,$69
+!byte $55,$55,$95,$95,$a5,$a4,$54,$50,$05,$15,$1a,$5a,$56,$56,$55,$55
+!byte $69,$69,$65,$65,$55,$15,$15,$05,$55,$56,$56,$59,$59,$56,$56,$55
+!byte $55,$55,$55,$55,$69,$69,$96,$96,$55,$95,$95,$65,$65,$95,$95,$55
+!byte $96,$96,$69,$69,$55,$55,$55,$55,$90,$94,$94,$95,$55,$55,$55,$55
+!byte $5a,$5a,$55,$55,$55,$54,$54,$50,$05,$15,$15,$55,$55,$55,$a5,$a5
+!byte $55,$55,$55,$55,$56,$16,$16,$06
+
+; Map Data
+* = $0400
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$07,$03,$03,$03
+!byte $03,$03,$03,$03,$03,$03,$05,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$02,$00,$00,$00,$00,$00,$00,$00,$00,$00,$04,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$02,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$04,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$02,$00,$00,$00,$00,$00,$00,$00,$00,$00,$04,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$02,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$04,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$08,$01,$01,$01,$01,$01,$01,$01,$01,$01,$06,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$07,$05,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$08,$06,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$00,$00
