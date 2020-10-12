@@ -12,9 +12,9 @@ BASIC = $0801
 ; Constants
 
 SCREENRAM = $0400
-SCREENRAM_1 = SCREENRAM + 240
-SCREENRAM_2 = SCREENRAM + 480
-SCREENRAM_3 = SCREENRAM + 720
+SCREENRAM_1 = SCREENRAM + 250
+SCREENRAM_2 = SCREENRAM + 500
+SCREENRAM_3 = SCREENRAM + 750
 
 VIC_Y_SCROLL             = $d011
 VIC_RASTER_LINE_HIGH_BIT = $d011
@@ -55,7 +55,7 @@ GETIN = $ffe4
 ; Clear the screen
 !zone {
 clear
-    ldx #240
+    ldx #250
     lda #$20
 -   sta SCREENRAM, x
     sta SCREENRAM_1, x
@@ -144,8 +144,8 @@ scroll_screen_right
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row - 1, x
         sta SCREENRAM + 40 * row, x
-        ;lda CHAR_COLOR + 40 * row - 1, x
-        ;sta CHAR_COLOR + 40 * row, x
+        lda CHAR_COLOR + 40 * row - 1, x
+        sta CHAR_COLOR + 40 * row, x
     }
     dex
     beq +
@@ -154,6 +154,7 @@ scroll_screen_right
 +   lda #$0
     !for row, 0, 24 {
         sta SCREENRAM + 40 * row
+        sta CHAR_COLOR + 40 * row
     }
 
     rts
@@ -169,8 +170,8 @@ scroll_screen_left
     !for row, 0, 24 {
         lda SCREENRAM + 40 * row + 1, x
         sta SCREENRAM + 40 * row, x
-        ;lda CHAR_COLOR + 40 * row + 1, x
-        ;sta CHAR_COLOR + 40 * row, x
+        lda CHAR_COLOR + 40 * row + 1, x
+        sta CHAR_COLOR + 40 * row, x
     }
     inx
     cpx #39
@@ -180,6 +181,7 @@ scroll_screen_left
 +   lda #$0
     !for row, 0, 24 {
         sta SCREENRAM + 40 * row + 39
+        sta CHAR_COLOR + 40 * row + 39
     }
 
     rts
@@ -195,8 +197,8 @@ scroll_screen_up
     !for row, 1, 24 {
         lda SCREENRAM + 40 * row + 40, x
         sta SCREENRAM + 40 * row, x
-        ;lda CHAR_COLOR + 40 * row + 40, x
-        ;sta CHAR_COLOR + 40 * row, x
+        lda CHAR_COLOR + 40 * row + 40, x
+        sta CHAR_COLOR + 40 * row, x
     }
     inx
     cpx #40
@@ -206,6 +208,7 @@ scroll_screen_up
 +   lda #$0
     !for col, 0, 39 {
         sta SCREENRAM + 40 * 24 + col
+        sta CHAR_COLOR + 40 * 24 + col
     }
 
     rts
@@ -221,6 +224,8 @@ scroll_screen_down
     !for row, 0, 23 {
         lda SCREENRAM + 40 * (23 - row), x
         sta SCREENRAM + 40 * (24 - row), x
+        lda CHAR_COLOR + 40 * (23 - row), x
+        sta CHAR_COLOR + 40 * (24 - row), x
     }
     inx
     cpx #40
@@ -230,6 +235,7 @@ scroll_screen_down
 +   lda #$0
     !for col, 0, 39 {
         sta SCREENRAM + col
+        sta CHAR_COLOR + col
     }
 
     rts
@@ -409,6 +415,21 @@ animate
 }
 
 ;------------------------------------------
+; void animate()
+!zone {
+resolve_belt_rules
+
+    lda ANIMATION_DELAY
+    cmp #3
+    beq +
+    rts
+
++
+    
+    rts
+}
+
+;------------------------------------------
 ; void entry()
 ; Program entrypoint
 BACKGROUND_COLOR = *: !byte 0
@@ -445,6 +466,7 @@ entry
 .loop
 
     jsr animate
+    jsr resolve_belt_rules
 
 ; Check Keyboard
     lda #%11111111  ; CIA#1 Port A set to output 
@@ -648,15 +670,15 @@ END_OF_CODE = *
 !byte $03,$03,$03,$03,$03,$03,$05,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$02,$00,$00,$00,$00,$00,$00,$00,$00,$00,$04,$00
-!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$07,$05,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$02,$00,$00,$00
-!byte $00,$00,$00,$00,$00,$00,$04,$00,$00,$00,$00,$00,$00,$00,$00,$00
-!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$04,$00,$00,$02,$08,$03,$03,$03,$03,$03
+!byte $05,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$02,$00,$00,$00,$00,$00,$00,$00,$00,$00,$04,$00
-!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$02,$00,$00,$00,$00,$00,$00,$04,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$02,$00,$00,$00
-!byte $00,$00,$00,$00,$00,$00,$04,$00,$00,$00,$00,$00,$00,$00,$00,$00
-!byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $00,$00,$00,$00,$00,$00,$04,$00,$00,$08,$01,$01,$01,$01,$01,$01
+!byte $06,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$08,$01,$01,$01,$01,$01,$09,$01,$01,$01,$06,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
