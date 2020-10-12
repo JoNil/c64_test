@@ -387,9 +387,10 @@ animate
     and #%11000000
     sta ANIMATION_FRAME_COUNT
 
-    ldx #240
-    
--   lda SCREENRAM, x
+    ldx #250
+
+.loop:
+    lda SCREENRAM, x
     and #%00111111
     ora ANIMATION_FRAME_COUNT
     sta SCREENRAM, x
@@ -410,7 +411,7 @@ animate
     sta SCREENRAM_3, x
 
     dex
-    bne -
+    bne .loop
     rts
 }
 
@@ -424,7 +425,37 @@ resolve_belt_rules
     beq +
     rts
 
-+
++ 
+!for quad, 0, 4 {
+!zone {
+
+   ldx #250
+
+.loop
+
+    lda SCREENRAM + quad*250, x
+    and #%00111111    ; Remove the animation part of the tile no
+    beq .next         ; If the tile is 0 we don't need to do anything
+
+    cmp #1
+    bne .next
+
+    lda SCREENRAM + quad*250 + 1, x
+    and #%00001000
+    beq .next
+
+    lda SCREENRAM + quad*250 + 1, x
+    and #%11110111
+    sta SCREENRAM + quad*250 + 1, x
+    lda SCREENRAM + quad*250, x
+    ora #%00001000
+    sta SCREENRAM + quad*250, x
+
+.next:
+    dex
+    bne .loop
+}
+}
     
     rts
 }
