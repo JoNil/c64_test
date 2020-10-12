@@ -17,3 +17,6 @@ cargo rustc --release -- -C opt-level="z" -C codegen-units=1 --target=i586-unkno
 - https://www.commodore.ca/manuals/c64_programmers_reference/c64-programmers_reference_guide-03-programming_graphics.pdf
 - http://sta.c64.org/cbm64mem.html
 - https://en.wikipedia.org/wiki/MOS_Technology_VIC-II
+- https://github.com/demesos/LAMAlib
+- https://github.com/demesos/LAMAlib/blob/master/LAMAlib-structured.inc
+- http://mynesdev.blogspot.com/2013/09/getting-most-out-of-ca65-part-1.html
