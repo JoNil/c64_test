@@ -415,41 +415,137 @@ animate
     rts
 }
 
+RESOLVE_BELT_DELAY = *: !byte 0
+
 ;------------------------------------------
-; void animate()
+; void resolve_belt_rules()
 !zone {
 resolve_belt_rules
 
-    lda ANIMATION_DELAY
-    cmp #3
+    inc RESOLVE_BELT_DELAY
+    lda RESOLVE_BELT_DELAY
+    cmp #16
     beq +
     rts
+    
++   lda #0
+    sta RESOLVE_BELT_DELAY
 
 + 
-!for quad, 0, 4 {
+!for row, 0, 24 {
 !zone {
-
-   ldx #250
-
+   ldx #1
 .loop
 
-    lda SCREENRAM + quad*250, x
+    lda SCREENRAM + row*40, x
     and #%00111111    ; Remove the animation part of the tile no
-    beq .next         ; If the tile is 0 we don't need to do anything
 
-    cmp #1            ; If wr are on a left tile 
+    cmp #17           ; If we are on a left tile with content
+    beq +
+    cmp #21
     bne .next
 
-    lda SCREENRAM + quad*250 + 1, x
++   lda SCREENRAM + row*40 - 1, x
     and #%00010000
-    beq .next
+    bne .next
 
-    lda SCREENRAM + quad*250 + 1, x
-    and #%11101111
-    sta SCREENRAM + quad*250 + 1, x
-    lda SCREENRAM + quad*250, x
+    lda SCREENRAM + row*40 - 1, x
     ora #%00010000
-    sta SCREENRAM + quad*250, x
+    sta SCREENRAM + row*40 - 1, x
+    lda SCREENRAM + row*40, x
+    and #%11101111
+    sta SCREENRAM + row*40, x
+
+.next:
+    inx
+    cpx #40
+    bne .loop
+}
+}
+
+!for row, 0, 24 {
+!zone {
+   ldx #39
+.loop
+
+    lda SCREENRAM + row*40 - 1, x
+    and #%00111111    ; Remove the animation part of the tile no
+
+    cmp #19           ; If we are on a right tile with content
+    beq +
+    cmp #23
+    bne .next
+
++   lda SCREENRAM + row*40, x
+    and #%00010000
+    bne .next
+
+    lda SCREENRAM + row*40, x
+    ora #%00010000
+    sta SCREENRAM + row*40, x
+    lda SCREENRAM + row*40 - 1, x
+    and #%11101111
+    sta SCREENRAM + row*40 - 1, x
+
+.next:
+    dex
+    bne .loop
+}
+}
+
+!for row, 1, 24 {
+!zone {
+   ldx #40
+.loop
+
+    lda SCREENRAM + row*40 - 1, x
+    and #%00111111    ; Remove the animation part of the tile no
+
+    cmp #18           ; If we are on a up tile with content
+    beq +
+    cmp #22
+    bne .next
+
++   lda SCREENRAM + row*40 - 1 - 40, x
+    and #%00010000
+    bne .next
+
+    lda SCREENRAM + row*40 - 1 - 40, x
+    ora #%00010000
+    sta SCREENRAM + row*40 - 1 - 40, x
+    lda SCREENRAM + row*40 - 1, x
+    and #%11101111
+    sta SCREENRAM + row*40 - 1, x
+
+.next:
+    dex
+    bne .loop
+}
+}
+
+!for row, 23, 0 {
+!zone {
+   ldx #40
+.loop
+
+    lda SCREENRAM + row*40 - 1, x
+    and #%00111111    ; Remove the animation part of the tile no
+
+    cmp #20           ; If we are on a down tile with content
+    beq +
+    cmp #24
+    bne .next
+
++   lda SCREENRAM + row*40 + 40 - 1, x
+    and #%00010000
+    bne .next
+
+    lda SCREENRAM + row*40 + 40 - 1, x
+    ora #%00010000
+    sta SCREENRAM + row*40 + 40 - 1, x
+    lda SCREENRAM + row*40 - 1, x
+    and #%11101111
+    sta SCREENRAM + row*40 - 1, x
 
 .next:
     dex
@@ -564,7 +660,7 @@ END_OF_CODE = *
 !byte $55,$55,$55,$55,$55,$54,$54,$50,$55,$55,$55,$55,$55,$15,$15,$05
 !byte $05,$15,$15,$55,$55,$55,$55,$55,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-!byte $00,$00,$00,$00,$00,$00,$00,$00,$55,$59,$7d,$7d,$7d,$7d,$59,$55
+!byte $00,$00,$3c,$3c,$3c,$3c,$00,$00,$55,$59,$7d,$7d,$7d,$7d,$59,$55
 !byte $55,$55,$7d,$7d,$be,$be,$55,$55,$55,$65,$7d,$7d,$7d,$7d,$65,$55
 !byte $55,$55,$be,$be,$7d,$7d,$55,$55,$95,$95,$bd,$bd,$7d,$7c,$54,$50
 !byte $55,$5a,$7e,$7d,$7d,$3d,$15,$05,$05,$15,$3d,$7d,$7e,$7e,$56,$56
@@ -596,7 +692,7 @@ END_OF_CODE = *
 !byte $55,$55,$55,$55,$55,$54,$54,$50,$55,$55,$55,$55,$55,$15,$15,$05
 !byte $05,$15,$15,$55,$55,$55,$55,$55,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-!byte $00,$00,$00,$00,$00,$00,$00,$00,$55,$65,$f5,$f5,$f5,$f5,$65,$55
+!byte $00,$00,$3c,$3c,$3c,$3c,$00,$00,$55,$65,$f5,$f5,$f5,$f5,$65,$55
 !byte $7d,$7d,$be,$be,$55,$55,$55,$55,$55,$59,$5f,$5f,$5f,$5f,$59,$55
 !byte $55,$55,$55,$55,$be,$be,$7d,$7d,$55,$65,$f5,$f5,$f5,$f4,$64,$50
 !byte $7d,$7e,$be,$bd,$55,$15,$15,$05,$05,$19,$1f,$5f,$5f,$5f,$59,$55
@@ -628,7 +724,7 @@ END_OF_CODE = *
 !byte $55,$55,$55,$55,$55,$54,$54,$50,$55,$55,$55,$55,$55,$15,$15,$05
 !byte $05,$15,$15,$55,$55,$55,$55,$55,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-!byte $00,$00,$00,$00,$00,$00,$00,$00,$55,$95,$d7,$d7,$d7,$d7,$95,$55
+!byte $00,$00,$3c,$3c,$3c,$3c,$00,$00,$55,$95,$d7,$d7,$d7,$d7,$95,$55
 !byte $be,$be,$55,$55,$55,$55,$7d,$7d,$55,$56,$d7,$d7,$d7,$d7,$56,$55
 !byte $7d,$7d,$55,$55,$55,$55,$be,$be,$7d,$bd,$d5,$d5,$d5,$d4,$94,$50
 !byte $be,$be,$57,$57,$57,$17,$15,$05,$05,$16,$17,$57,$57,$57,$7e,$7d
@@ -660,7 +756,7 @@ END_OF_CODE = *
 !byte $55,$55,$55,$55,$55,$54,$54,$50,$55,$55,$55,$55,$55,$15,$15,$05
 !byte $05,$15,$15,$55,$55,$55,$55,$55,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-!byte $00,$00,$00,$00,$00,$00,$00,$00,$55,$56,$5f,$5f,$5f,$5f,$56,$55
+!byte $00,$00,$3c,$3c,$3c,$3c,$00,$00,$55,$56,$5f,$5f,$5f,$5f,$56,$55
 !byte $55,$55,$55,$55,$7d,$7d,$be,$be,$55,$95,$f5,$f5,$f5,$f5,$95,$55
 !byte $be,$be,$7d,$7d,$55,$55,$55,$55,$be,$be,$7d,$7d,$55,$54,$54,$50
 !byte $55,$56,$5f,$5f,$5f,$1f,$16,$05,$05,$15,$15,$55,$7d,$7d,$be,$be
@@ -698,14 +794,14 @@ END_OF_CODE = *
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$07,$03,$03,$03
-!byte $03,$03,$03,$03,$03,$03,$08,$00,$00,$00,$00,$00,$00,$00,$00,$00
+!byte $03,$13,$03,$03,$03,$03,$08,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$02,$00,$00,$00,$00,$00,$00,$00,$00,$00,$04,$00
 !byte $00,$07,$08,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$02,$00,$00,$00
-!byte $00,$00,$00,$00,$00,$00,$04,$00,$00,$02,$0b,$03,$03,$03,$03,$03
+!byte $00,$00,$00,$00,$00,$00,$14,$00,$00,$02,$0b,$03,$03,$03,$03,$03
 !byte $08,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-!byte $00,$00,$00,$00,$02,$00,$00,$00,$00,$00,$00,$00,$00,$00,$04,$00
+!byte $00,$00,$00,$00,$12,$00,$00,$00,$00,$00,$00,$00,$00,$00,$04,$00
 !byte $00,$02,$00,$00,$00,$00,$00,$00,$04,$00,$00,$00,$00,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$02,$00,$00,$00
 !byte $00,$00,$00,$00,$00,$00,$04,$00,$00,$06,$01,$01,$01,$01,$01,$01
