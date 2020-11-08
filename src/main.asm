@@ -651,8 +651,8 @@ entry
     bne -
 
     ; Measure Perf with background color
-    ;lda #5
-    ;sta VIC_BORDER_COLOR
+    lda #5
+    sta VIC_BORDER_COLOR
 
     jmp .loop
 }
