@@ -444,6 +444,8 @@ resolve_belt_rules
     cmp #17           ; If we are on a left tile with content
     beq +
     cmp #21
+    beq +
+    cmp #25
     bne .next
 
 +   lda SCREENRAM + row*40 - 1, x
@@ -475,6 +477,8 @@ resolve_belt_rules
     cmp #19           ; If we are on a right tile with content
     beq +
     cmp #23
+    beq +
+    cmp #27
     bne .next
 
 +   lda SCREENRAM + row*40, x
@@ -505,6 +509,8 @@ resolve_belt_rules
     cmp #18           ; If we are on a up tile with content
     beq +
     cmp #22
+    beq +
+    cmp #26
     bne .next
 
 +   lda SCREENRAM + row*40 - 1 - 40, x
@@ -535,6 +541,8 @@ resolve_belt_rules
     cmp #20           ; If we are on a down tile with content
     beq +
     cmp #24
+    beq +
+    cmp #28
     bne .next
 
 +   lda SCREENRAM + row*40 + 40 - 1, x
