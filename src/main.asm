@@ -42,6 +42,34 @@ SID_VOLUME                  = $d418
 CHAR_COLOR = $d800
 GETIN = $ffe4
 
+; Character memory
+; $D018 = %xxxx000x -> charmem is at $0000
+; $D018 = %xxxx001x -> charmem is at $0800
+; $D018 = %xxxx010x -> charmem is at $1000
+; $D018 = %xxxx011x -> charmem is at $1800
+; $D018 = %xxxx100x -> charmem is at $2000
+; $D018 = %xxxx101x -> charmem is at $2800
+; $D018 = %xxxx110x -> charmem is at $3000
+; $D018 = %xxxx111x -> charmem is at $3800
+
+; Screen memory
+; $D018 = %0000xxxx -> screenmem is at $0000
+; $D018 = %0001xxxx -> screenmem is at $0400
+; $D018 = %0010xxxx -> screenmem is at $0800
+; $D018 = %0011xxxx -> screenmem is at $0c00
+; $D018 = %0100xxxx -> screenmem is at $1000
+; $D018 = %0101xxxx -> screenmem is at $1400
+; $D018 = %0110xxxx -> screenmem is at $1800
+; $D018 = %0111xxxx -> screenmem is at $1c00
+; $D018 = %1000xxxx -> screenmem is at $2000
+; $D018 = %1001xxxx -> screenmem is at $2400
+; $D018 = %1010xxxx -> screenmem is at $2800
+; $D018 = %1011xxxx -> screenmem is at $2c00
+; $D018 = %1100xxxx -> screenmem is at $3000
+; $D018 = %1101xxxx -> screenmem is at $3400
+; $D018 = %1110xxxx -> screenmem is at $3800
+; $D018 = %1111xxxx -> screenmem is at $3c00
+
 ;------------------------------------------
 ; Macros
 
