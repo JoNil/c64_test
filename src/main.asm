@@ -42,6 +42,10 @@ SID_VOLUME                  = $d418
 CHAR_COLOR = $d800
 GETIN = $ffe4
 
+; - Do i want to animate by switching char set?
+; - Structure code by having main loop do several frames in loop for all the stages
+; - Do off screen rendering with double buffering
+
 ; Character memory
 ; $D018 = %xxxx000x -> charmem is at $0000
 ; $D018 = %xxxx001x -> charmem is at $0800
